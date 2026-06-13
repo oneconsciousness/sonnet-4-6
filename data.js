@@ -14,17 +14,30 @@ window.HOPE_DATA = {
       "anchor": "tl-edu-nit-calicut"
     },
     {
-      "id": "exp-novartis",
+      "id": "exp-novartis-aa",
       "type": "experience",
       "date_start": "2020-08",
-      "date_end": "2022-07",
-      "label": "Analyst @ Novartis",
+      "date_end": "2021-07",
+      "label": "Associate Analyst @ Novartis",
       "org": "Novartis Healthcare",
       "domain": "novartis.com",
       "metric": "10% ROI increase",
-      "skills": ["Python", "SQL", "D3.js", "Statistical Analysis"],
+      "skills": ["Python", "SQL", "Statistical Analysis"],
       "pane": "experience",
-      "anchor": "tl-exp-novartis"
+      "anchor": "tl-exp-novartis-aa"
+    },
+    {
+      "id": "exp-novartis-ba",
+      "type": "experience",
+      "date_start": "2021-08",
+      "date_end": "2022-07",
+      "label": "Business Analyst @ Novartis",
+      "org": "Novartis Healthcare",
+      "domain": "novartis.com",
+      "metric": "Star Employee × 2",
+      "skills": ["D3.js", "Python", "Tableau", "Statistical Analysis"],
+      "pane": "experience",
+      "anchor": "tl-exp-novartis-ba"
     },
     {
       "id": "edu-uiowa",
@@ -51,6 +64,58 @@ window.HOPE_DATA = {
       "skills": ["PySpark", "Statistical Analysis", "Python"],
       "pane": "experience",
       "anchor": "tl-exp-iowa-research"
+    },
+    {
+      "id": "proj-heineken",
+      "type": "project",
+      "date_start": "2023-02",
+      "date_end": "2023-03",
+      "label": "Heineken Demand Forecasting",
+      "org": "Heineken",
+      "domain": "heineken.com",
+      "metric": "Ranked 4th nationally",
+      "skills": ["ARIMA", "Supervised ML", "Python", "SQL"],
+      "pane": "projects",
+      "anchor": "tl-proj-heineken"
+    },
+    {
+      "id": "proj-supply-chain",
+      "type": "project",
+      "date_start": "2023-05",
+      "date_end": "2023-08",
+      "label": "Supply Chain COVID Impact",
+      "org": "University of Iowa",
+      "domain": "uiowa.edu",
+      "metric": "17K-node graph",
+      "skills": ["Network Analysis", "Python", "BeautifulSoup"],
+      "pane": "projects",
+      "anchor": "tl-proj-supply-chain"
+    },
+    {
+      "id": "proj-freelance-analyst",
+      "type": "project",
+      "date_start": "2023-05",
+      "date_end": "2023-08",
+      "label": "Freelance Data Analyst",
+      "org": null,
+      "domain": null,
+      "metric": "Spotify + Billboard APIs",
+      "skills": ["Tableau", "Power BI", "Python"],
+      "pane": "projects",
+      "anchor": "tl-proj-freelance-analyst"
+    },
+    {
+      "id": "proj-vehicle-selection",
+      "type": "project",
+      "date_start": "2023-08",
+      "date_end": "2023-12",
+      "label": "Vehicle Selection ML Tool",
+      "org": "State Farm",
+      "domain": "statefarm.com",
+      "metric": "Regression + NLP + NNs",
+      "skills": ["Scikit-learn", "NLP", "Neural Networks", "Python"],
+      "pane": "projects",
+      "anchor": "tl-proj-vehicle-selection"
     },
     {
       "id": "cert-az900",

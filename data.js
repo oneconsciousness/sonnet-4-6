@@ -14,6 +14,19 @@ window.HOPE_DATA = {
       "anchor": "tl-edu-nit-calicut"
     },
     {
+      "id": "proj-bass-drum",
+      "type": "project",
+      "date_start": "2019-08",
+      "date_end": "2020-05",
+      "label": "Automatic Bass Drum Pedal",
+      "org": "NIT Calicut",
+      "domain": "nitc.ac.in",
+      "metric": "Undergrad research",
+      "skills": ["Embedded Systems", "Signal Processing", "Motor Control"],
+      "pane": "projects",
+      "anchor": "tl-proj-bass-drum"
+    },
+    {
       "id": "exp-novartis-aa",
       "type": "experience",
       "date_start": "2020-08",

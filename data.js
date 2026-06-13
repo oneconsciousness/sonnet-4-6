@@ -155,6 +155,32 @@ window.HOPE_DATA = {
       "skills": ["MCP", "RAG", "FastAPI"],
       "pane": "projects",
       "anchor": "tl-proj-art-of-living"
+    },
+    {
+      "id": "proj-multi-agent-engine",
+      "type": "project",
+      "date_start": "2025-01",
+      "date_end": "2025-03",
+      "label": "Multi-Agent Workflow Engine",
+      "org": "EY",
+      "domain": "ey.com",
+      "metric": "3 wks → 2 days",
+      "skills": ["Autogen", "MCP", "Multi-Agent", "Python"],
+      "pane": "projects",
+      "anchor": "tl-proj-multi-agent-engine"
+    },
+    {
+      "id": "proj-clinical-trial",
+      "type": "project",
+      "date_start": "2024-10",
+      "date_end": "2024-10",
+      "label": "Clinical Trial Matching Engine",
+      "org": null,
+      "domain": null,
+      "metric": "Prod-grade accuracy",
+      "skills": ["RAG", "NER", "SciSpacy", "Python"],
+      "pane": "projects",
+      "anchor": "tl-proj-clinical-trial"
     }
   ],
   "traveler": "rocket"

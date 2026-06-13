@@ -202,11 +202,20 @@
       <span class="body">
         <span class="label">Projects</span>
         <span class="meta">
-          <span class="count">5 projects</span>
+          <span class="count">7 projects</span>
           <span class="integrity">
             <span class="bar-track"><span class="bar-fill" style="width: 92%"></span></span>
             <span class="pct">92%</span>
           </span>
+        </span>
+      </span>
+    </button>
+    <button class="section-btn" data-section="social" type="button">
+      <span class="icon"><span class="material-symbols-rounded">feed</span></span>
+      <span class="body">
+        <span class="label">Social Feed</span>
+        <span class="meta">
+          <span class="count">5 posts</span>
         </span>
       </span>
     </button>
@@ -240,21 +249,21 @@
       </div>
     </section>
 
-  <!-- SOCIAL FEED -->
+  <!-- SOCIAL FEED — OVERVIEW PREVIEW (compact, 2 posts) -->
   <div class="social-feed-section" style="margin-top: 2rem; padding: 0 0 1.5rem;">
-    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.25rem; padding: 0 0.25rem;">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; padding: 0 0.25rem;">
       <span style="font-family: var(--font-mono); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted);">Latest from</span>
+      <button class="section-btn-inline" onclick="document.querySelector('[data-section=social]').click()" type="button" style="background:none;border:none;cursor:pointer;font-family:var(--font-mono);font-size:10px;color:var(--accent-orange);letter-spacing:0.08em;text-transform:uppercase;padding:2px 8px;border:1px solid var(--accent-orange);border-radius:20px;">See all &rarr;</button>
     </div>
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: start;">
 
-      <!-- Instagram -->
+      <!-- Instagram compact -->
       <div>
         <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="color: var(--accent-orange);"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
           <span style="font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-secondary);">Instagram</span>
         </div>
         <blockquote class="instagram-media"
-          data-instgrm-captioned
           data-instgrm-permalink="https://www.instagram.com/p/DZImFSAE1W0/?utm_source=ig_embed&utm_campaign=loading"
           data-instgrm-version="14"
           style="background:#FFF;border:0;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.10);margin:0;max-width:100%;min-width:280px;padding:0;width:100%;">
@@ -262,7 +271,7 @@
         <script async src="//www.instagram.com/embed.js"></script>
       </div>
 
-      <!-- LinkedIn -->
+      <!-- LinkedIn compact -->
       <div>
         <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="color: var(--accent-orange);"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
@@ -271,12 +280,12 @@
         <div style="border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.10);">
           <iframe
             src="https://www.linkedin.com/embed/feed/update/urn:li:share:7471382850517221376"
-            height="570"
+            height="370"
             width="100%"
             frameborder="0"
             allowfullscreen=""
             title="Embedded LinkedIn post"
-            style="display:block;border-radius:12px;">
+            style="display:block;">
           </iframe>
         </div>
       </div>
@@ -443,9 +452,7 @@
     <div class="item-card" data-expand id="tl-exp-careerx">
       <span class="accent-bar"></span>
       <div class="item-head">
-        <img class="org-logo" src="https://www.google.com/s2/favicons?domain=careerx.app&sz=128"
-             alt="CareerX" width="44" height="44"
-             onerror="this.outerHTML='&lt;span class=&quot;org-fallback&quot;&gt;C&lt;/span&gt;';">
+        <img class="org-logo" src="data:image/jpeg;base64,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" alt="CareerX" width="44" height="44" style="border-radius:6px;object-fit:contain;">
         <div class="item-info">
           <div class="title-row">
             <span class="role-title">Founder &amp; CTO</span>
@@ -1299,9 +1306,7 @@
     <div class="item-card project" data-expand id="tl-proj-careerx-platform">
       <span class="accent-bar"></span>
       <div class="item-head">
-        <img class="org-logo" src="https://www.google.com/s2/favicons?domain=careerx.app&sz=128"
-             alt="CareerX Platform" width="44" height="44"
-             onerror="this.outerHTML='&lt;span class=&quot;org-fallback&quot;&gt;C&lt;/span&gt;';">
+        <img class="org-logo" src="data:image/jpeg;base64,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" alt="CareerX Platform" width="44" height="44" style="border-radius:6px;object-fit:contain;">
         <div class="item-info">
           <div class="title-row">
             <span class="role-title">CareerX &mdash; AI Career Platform</span>
@@ -1336,6 +1341,162 @@
       </div>
     </div>
 
+    <!-- Multi-Agent Workflow Engine -->
+    <div class="item-card project" data-expand id="tl-proj-multi-agent-engine">
+      <span class="accent-bar"></span>
+      <div class="item-head">
+        <img class="org-logo" src="https://www.google.com/s2/favicons?domain=ey.com&sz=128"
+             alt="EY" width="44" height="44"
+             onerror="this.outerHTML='&lt;span class=&quot;org-fallback&quot;&gt;E&lt;/span&gt;';">
+        <div class="item-info">
+          <div class="title-row">
+            <span class="role-title">Multi-Agent Workflow Engine</span>
+          </div>
+          <span class="role-company">Multi-Agent System with Agentic Orchestration &amp; HITL</span>
+          <span class="role-dates">Jan 2025 &ndash; Mar 2025</span>
+        </div>
+        <div class="item-meta">
+          <span class="contrib-pill">3 wks &rarr; 2 days</span>
+          <span class="chevron"><span class="material-symbols-rounded">expand_more</span></span>
+        </div>
+      </div>
+      <div class="item-body">
+        <div class="item-body-inner">
+          <div class="item-divider"></div>
+          <article class="contrib ic" style="background: transparent; border: 0; border-left: 0; padding: 0;">
+            <p class="contrib-action">Designed a multi-agent system with agentic orchestration and human-in-the-loop checkpoints &mdash; specialized agents for intake, risk assessment, scheduling, data queries, and UI. Built with Autogen and MCP.</p>
+            <div class="contrib-impact">
+              <span class="material-symbols-rounded">arrow_forward</span>
+              <p>Reduced enterprise approval cycles from 3 weeks to 2 days.</p>
+            </div>
+            <div class="contrib-skills">
+              <span class="skill-chip" data-cat="tools">Autogen</span>
+              <span class="skill-chip" data-cat="tools">MCP</span>
+              <span class="skill-chip" data-cat="methods">Multi-Agent</span>
+              <span class="skill-chip" data-cat="domain">Azure</span>
+              <span class="skill-chip" data-cat="languages">Python</span>
+              <span class="skill-chip" data-cat="tools">FastAPI</span>
+            </div>
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <!-- Clinical Trial Matching Engine -->
+    <div class="item-card project" data-expand id="tl-proj-clinical-trial">
+      <span class="accent-bar"></span>
+      <div class="item-head">
+        <span class="org-fallback">Ct</span>
+        <div class="item-info">
+          <div class="title-row">
+            <span class="role-title">Clinical Trial Matching Engine</span>
+          </div>
+          <span class="role-company">ML + RAG + NER</span>
+          <span class="role-dates">Oct 2024</span>
+        </div>
+        <div class="item-meta">
+          <span class="contrib-pill">Prod-grade accuracy</span>
+          <span class="chevron"><span class="material-symbols-rounded">expand_more</span></span>
+        </div>
+      </div>
+      <div class="item-body">
+        <div class="item-body-inner">
+          <div class="item-divider"></div>
+          <article class="contrib ic" style="background: transparent; border: 0; border-left: 0; padding: 0;">
+            <p class="contrib-action">End-to-end patient&ndash;clinical trial matching system combining rule-based logic, Named-Entity Recognition (SciSpacy), and RAG with LLMs to interpret eligibility criteria and patient conditions. Real-time API validation with modular JSON outputs.</p>
+            <div class="contrib-impact">
+              <span class="material-symbols-rounded">arrow_forward</span>
+              <p>Production-grade matching accuracy across structured and unstructured medical data.</p>
+            </div>
+            <div class="contrib-skills">
+              <span class="skill-chip" data-cat="methods">RAG</span>
+              <span class="skill-chip" data-cat="methods">NER</span>
+              <span class="skill-chip" data-cat="tools">SciSpacy</span>
+              <span class="skill-chip" data-cat="tools">LLMs</span>
+              <span class="skill-chip" data-cat="languages">Python</span>
+              <span class="skill-chip" data-cat="tools">REST APIs</span>
+            </div>
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <a class="backtotop" href="#top" aria-hidden="true">&uarr; Contents</a>
+  </div>
+
+  <!-- SOCIAL FEED PANE -->
+  <div class="section-pane" data-pane="social" id="pane-social">
+    <div style="padding: 0 0 2rem;">
+      <p style="font-family: var(--font-mono); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 1.5rem;">What I've been sharing lately</p>
+
+      <!-- Row 1 -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: start; margin-bottom: 2rem;">
+
+        <!-- Instagram post 1 (top post, 77 likes) -->
+        <div>
+          <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="color: var(--accent-orange);"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+            <span style="font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-secondary);">Instagram</span>
+          </div>
+          <blockquote class="instagram-media"
+            data-instgrm-permalink="https://www.instagram.com/p/DZImFSAE1W0/?utm_source=ig_embed&utm_campaign=loading"
+            data-instgrm-version="14"
+            style="background:#FFF;border:0;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.10);margin:0;max-width:100%;min-width:280px;padding:0;width:100%;">
+          </blockquote>
+        </div>
+
+        <!-- LinkedIn post 1 (EY Summit) -->
+        <div>
+          <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="color: var(--accent-orange);"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+            <span style="font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-secondary);">LinkedIn</span>
+          </div>
+          <div style="border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.10);">
+            <iframe
+              src="https://www.linkedin.com/embed/feed/update/urn:li:share:7471382850517221376"
+              height="420"
+              width="100%"
+              frameborder="0"
+              allowfullscreen=""
+              title="EY Global Summit post"
+              style="display:block;">
+            </iframe>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 2 -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: start; margin-bottom: 2rem;">
+
+        <!-- Instagram post 2 -->
+        <div>
+          <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="color: var(--accent-orange);"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+            <span style="font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-secondary);">Instagram</span>
+          </div>
+          <blockquote class="instagram-media"
+            data-instgrm-permalink="https://www.instagram.com/p/DZOZiqIN_Vs/?utm_source=ig_embed&utm_campaign=loading"
+            data-instgrm-version="14"
+            style="background:#FFF;border:0;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.10);margin:0;max-width:100%;min-width:280px;padding:0;width:100%;">
+          </blockquote>
+        </div>
+
+        <!-- Instagram post 3 -->
+        <div>
+          <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="color: var(--accent-orange);"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+            <span style="font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-secondary);">Instagram</span>
+          </div>
+          <blockquote class="instagram-media"
+            data-instgrm-permalink="https://www.instagram.com/p/DZfFoZQu_Mr/?utm_source=ig_embed&utm_campaign=loading"
+            data-instgrm-version="14"
+            style="background:#FFF;border:0;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.10);margin:0;max-width:100%;min-width:280px;padding:0;width:100%;">
+          </blockquote>
+        </div>
+      </div>
+
+      <script async src="//www.instagram.com/embed.js"></script>
+    </div>
     <a class="backtotop" href="#top" aria-hidden="true">&uarr; Contents</a>
   </div>
 

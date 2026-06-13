@@ -14,6 +14,19 @@ window.HOPE_DATA = {
       "anchor": "tl-edu-nit-calicut"
     },
     {
+      "id": "exp-auckam",
+      "type": "experience",
+      "date_start": "2019-05",
+      "date_end": "2019-06",
+      "label": "Embedded Systems Intern @ Auckam",
+      "org": "Auckam",
+      "domain": null,
+      "metric": "IoT · Azure cloud",
+      "skills": ["ESP32", "MQTT", "C/C++", "Azure"],
+      "pane": "experience",
+      "anchor": "tl-exp-auckam"
+    },
+    {
       "id": "proj-bass-drum",
       "type": "project",
       "date_start": "2019-08",

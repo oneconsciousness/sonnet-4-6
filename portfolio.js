@@ -40,6 +40,16 @@
     return meta && meta.content ? meta.content.trim() : '';
   };
   var getShareUrl = function () { return getCanonicalUrl() || window.location.href; };
+  // A share only works when it points at a public URL. Before publishing, the
+  // page is opened from disk (file://) or a local preview server (localhost) and
+  // the canonical meta is still empty — sharing that gives a dead/empty card on
+  // LinkedIn / X / WhatsApp / email. Every share target gates on this.
+  var canShare = function () {
+    if (getCanonicalUrl()) return true; // publish stamped a real URL
+    var u = window.location.href;
+    if (u.indexOf('file:') === 0) return false;
+    return !/^https?:\/\/(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\])(:|\/|$)/i.test(u);
+  };
   var getName = function () {
     var el = document.querySelector('h1.name');
     return el ? el.textContent.trim() : '';
@@ -66,8 +76,9 @@
   var copyShareUrl = function () {
     var canonical = getCanonicalUrl();
     var url = canonical || window.location.href;
-    // No published link yet and opened from disk → don't leak the local file path.
-    if (!canonical && url.indexOf('file:') === 0) { flash('Publish first to share a link', false); return; }
+    // No published link yet (opened from disk or a local preview server) →
+    // don't leak the local path; tell them to publish first.
+    if (!canShare()) { flash('Publish first to share a link', false); return; }
     if (navigator.clipboard && window.isSecureContext) {
       navigator.clipboard.writeText(url).then(
         function () { flash('Copied!', true); },
@@ -99,6 +110,8 @@
       var action = item.getAttribute('data-share');
       closeShareMenu();
       if (action === 'copy') { copyShareUrl(); return; }
+      // Same guard as copy: never open a social share pointing at a local/preview URL.
+      if (!canShare()) { flash('Publish first to share a link', false); return; }
       var url = getShareUrl();
       var text = getShareText();
       var href = '';
@@ -384,7 +397,8 @@
       skills: { sel: '.section-pane[data-pane="skills"]', pane: 'skills' },
       education: { sel: '.section-pane[data-pane="education"]', pane: 'education' },
       certifications: { sel: '.section-pane[data-pane="certifications"]', pane: 'certifications' },
-      projects: { sel: '.section-pane[data-pane="projects"]', pane: 'projects' }
+      projects: { sel: '.section-pane[data-pane="projects"]', pane: 'projects' },
+      social: { sel: '.section-pane[data-pane="social"]', pane: 'social' }
     };
     var spotEl = null;
     var spotCleanup = null;
@@ -471,25 +485,55 @@
   // NOT un-match a viewport media query, so the DOM must be restored
   // explicitly there (the CSS side is gated with body:not(...) classes).
   var railsMql = window.matchMedia ? window.matchMedia('(min-width: 1440px)') : null;
-  var railSummary = document.querySelector('.identity-card .identity-info > .summary');
-  var railHome = railSummary ? railSummary.parentNode : null; // .identity-info
+  // When there's the width for a rail, the WHOLE identity (photo + the full
+  // .identity-info — name, headline, LIVE pill, stats, contact, summary) rides
+  // into the left rail, photo on top. Only the timeline (#throughline) stays in
+  // the centre card, where it picks up a "Career Timeline" header. nextSibling
+  // captures the exact in-card slot for an exact restore.
+  var railInfo = document.querySelector('.identity-card > .identity-row > .identity-info');
+  var railInfoHome = railInfo ? railInfo.parentNode : null; // .identity-row
+  var railInfoNext = railInfo ? railInfo.nextSibling : null;
+  var railPhoto = document.getElementById('photo-upload');
+  var railPhotoHome = railPhoto ? railPhoto.parentNode : null; // .identity-row
+  var railPhotoNext = railPhoto ? railPhoto.nextSibling : null; // restore exact slot
   var railAside = null;
+  function mountEyebrows() {
+    // "Career Timeline" header above the standalone strip. CSS :has() gates it to
+    // a visible strip, so empty/absent timeline data shows no orphan header.
+    var strip = document.querySelector('.identity-card > .tl-strip');
+    if (!strip) return;
+    var prev = strip.previousElementSibling;
+    if (prev && prev.classList.contains('tl-rail-eyebrow')) return;
+    var eb = document.createElement('div');
+    eb.className = 'tl-rail-eyebrow';
+    eb.setAttribute('aria-hidden', 'true');
+    eb.textContent = 'Career Timeline';
+    strip.parentNode.insertBefore(eb, strip);
+  }
+  function unmountEyebrows() {
+    var eb = document.querySelector('.tl-rail-eyebrow');
+    if (eb && eb.parentNode) eb.parentNode.removeChild(eb);
+  }
   function mountRails() {
-    if (!railSummary || !railHome) return; // no summary in this build — grid-only rails via CSS
+    if (!railInfo || !railInfoHome) return; // no identity in this build — grid-only rails via CSS
     if (!railAside) {
       railAside = document.createElement('aside');
       railAside.className = 'summary-rail';
-      railAside.setAttribute('aria-label', 'About');
+      railAside.setAttribute('aria-label', 'Profile');
     }
     if (!railAside.parentNode) {
       var wrap = document.querySelector('.wrap');
       if (wrap) wrap.appendChild(railAside);
     }
-    if (railSummary.parentNode !== railAside) railAside.appendChild(railSummary);
+    if (railPhoto && railPhoto.parentNode !== railAside) railAside.appendChild(railPhoto); // photo on top
+    if (railInfo.parentNode !== railAside) railAside.appendChild(railInfo);
+    mountEyebrows();
   }
   function unmountRails() {
-    // appendChild = the original slot: the summary is .identity-info's last child.
-    if (railSummary && railHome && railSummary.parentNode !== railHome) railHome.appendChild(railSummary);
+    // Restore each node to its exact pre-rail slot in .identity-row.
+    if (railInfo && railInfoHome && railInfo.parentNode !== railInfoHome) railInfoHome.insertBefore(railInfo, railInfoNext);
+    if (railPhoto && railPhotoHome && railPhoto.parentNode !== railPhotoHome) railPhotoHome.insertBefore(railPhoto, railPhotoNext);
+    unmountEyebrows();
     if (railAside && railAside.parentNode) railAside.parentNode.removeChild(railAside);
   }
   function syncRails() {
@@ -500,7 +544,7 @@
     if (railsMql.addEventListener) railsMql.addEventListener('change', syncRails);
     else if (railsMql.addListener) railsMql.addListener(syncRails);
   }
-  window.addEventListener('beforeprint', unmountRails); // every print mode is single-column; summary prints in-card
+  window.addEventListener('beforeprint', unmountRails); // every print mode is single-column; identity prints in-card
   window.addEventListener('afterprint', syncRails);
   const PHOTO_KEY = 'hope_headshot_data_url';
   const photoInput = document.getElementById('photo-input');
@@ -551,6 +595,352 @@
   }
 
   // ── THE THROUGHLINE — chronological strip in the identity card ──
+  // ── Social Feed (optional app) ───────────────────────────────────────────
+  // Renders window.HOPE_DATA.social into #social-grid as a MASONRY of cards.
+  // Each post becomes ONE of two templates, chosen by what the URL is:
+  //   • EMBED card   — a live embed when the URL is an embeddable post/video
+  //   • PROFILE card — a designed, brand-coloured tile when it's a profile,
+  //                    channel, or site (or when an embed can't be resolved)
+  // There are NO bland link cards — a profile card IS the designed result when
+  // there's nothing to embed. Embeds need an http origin + a connection; the
+  // embed card also carries a quiet "View on …" link for the offline case.
+  // (The one app that loads third-party embed scripts/iframes — Hope is
+  // otherwise self-contained; a disclosed trade-off, see skills/portfolio.)
+  (function () {
+    var grid = document.getElementById('social-grid');             // the full Social pane
+    var latestEl = document.getElementById('overview-latest');     // Overview · "Latest from"
+    var hlEl = document.getElementById('overview-highlights');      // Overview · "Highlights"
+    var posts = (window.HOPE_DATA && Array.isArray(window.HOPE_DATA.social)) ? window.HOPE_DATA.social : [];
+    var timeline = (window.HOPE_DATA && Array.isArray(window.HOPE_DATA.timeline)) ? window.HOPE_DATA.timeline : [];
+    if (!grid && !latestEl && !hlEl) return;
+
+    function esc(s) {
+      return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+      });
+    }
+    // Platform registry. cls 'iframe' → src(url) returns an <iframe> URL (or
+    // null → link card only); 'script' → block(url) returns the platform's
+    // blockquote + names the async script to load once; 'link' → link card only.
+    var P = {
+      youtube:    { name: 'YouTube',     cls: 'iframe', h: 220, src: function (u) { var m = u.match(/(?:youtu\.be\/|[?&]v=|embed\/|shorts\/)([\w-]{11})/); return m ? 'https://www.youtube.com/embed/' + m[1] : null; } },
+      vimeo:      { name: 'Vimeo',       cls: 'iframe', h: 220, src: function (u) { var m = u.match(/vimeo\.com\/(?:video\/)?(\d+)/); return m ? 'https://player.vimeo.com/video/' + m[1] : null; } },
+      spotify:    { name: 'Spotify',     cls: 'iframe', h: 152, src: function (u) { var m = u.match(/open\.spotify\.com\/(?:intl-[a-z]+\/)?(track|album|playlist|episode|show|artist)\/(\w+)/); return m ? 'https://open.spotify.com/embed/' + m[1] + '/' + m[2] : null; } },
+      soundcloud: { name: 'SoundCloud',  cls: 'iframe', h: 166, src: function (u) { return 'https://w.soundcloud.com/player/?url=' + encodeURIComponent(u) + '&color=%23d97706&visual=false'; } },
+      applemusic: { name: 'Apple Music', cls: 'iframe', h: 175, src: function (u) { return u.replace('music.apple.com', 'embed.music.apple.com'); } },
+      figma:      { name: 'Figma',       cls: 'iframe', h: 300, src: function (u) { return 'https://www.figma.com/embed?embed_host=hope&url=' + encodeURIComponent(u); } },
+      codepen:    { name: 'CodePen',     cls: 'iframe', h: 300, src: function (u) { var m = u.match(/codepen\.io\/([^\/]+)\/(?:pen|details)\/(\w+)/); return m ? 'https://codepen.io/' + m[1] + '/embed/' + m[2] + '?default-tab=result' : null; } },
+      loom:       { name: 'Loom',        cls: 'iframe', h: 240, src: function (u) { return u.indexOf('/embed/') > -1 ? u : u.replace('/share/', '/embed/'); } },
+      bluesky:    { name: 'Bluesky',     cls: 'iframe', h: 300, src: function (u) { var m = u.match(/bsky\.app\/profile\/([^\/]+)\/post\/(\w+)/); return m ? 'https://embed.bsky.app/embed/' + m[1] + '/app.bsky.feed.post/' + m[2] : null; } },
+      linkedin:   { name: 'LinkedIn',    cls: 'iframe', h: 320, src: function (u) { var m = u.match(/(urn:li:(?:share|ugcPost|activity):[\w-]+)/) || u.match(/activity-(\d+)/); return m ? 'https://www.linkedin.com/embed/feed/update/' + (m[1].indexOf('urn:') === 0 ? m[1] : 'urn:li:activity:' + m[1]) : null; } },
+      substack:   { name: 'Substack',    cls: 'iframe', h: 320, src: function (u) { return u; } },
+      flickr:     { name: 'Flickr',      cls: 'iframe', h: 280, src: function (u) { return u; } },
+      tiktok:     { name: 'TikTok',      cls: 'script', script: 'https://www.tiktok.com/embed.js', block: function (u) { var m = u.match(/video\/(\d+)/); return '<blockquote class="tiktok-embed" cite="' + esc(u) + '"' + (m ? ' data-video-id="' + m[1] + '"' : '') + ' style="max-width:325px;min-width:240px"><a href="' + esc(u) + '"></a></blockquote>'; } },
+      instagram:  { name: 'Instagram',   cls: 'script', script: '//www.instagram.com/embed.js', global: 'instgrm', process: function () { window.instgrm && window.instgrm.Embeds && window.instgrm.Embeds.process(); }, block: function (u) { return '<blockquote class="instagram-media" data-instgrm-permalink="' + esc(u) + '" data-instgrm-version="14"></blockquote>'; } },
+      x:          { name: 'X',           cls: 'script', script: 'https://platform.twitter.com/widgets.js', block: function (u) { return '<blockquote class="twitter-tweet"><a href="' + esc(String(u).replace('//x.com', '//twitter.com')) + '"></a></blockquote>'; } },
+      threads:    { name: 'Threads',     cls: 'script', script: 'https://www.threads.net/embed.js', block: function (u) { return '<blockquote class="text-post-media" data-text-post-permalink="' + esc(u) + '"></blockquote>'; } },
+      pinterest:  { name: 'Pinterest',   cls: 'script', script: '//assets.pinterest.com/js/pinit.js', block: function (u) { return '<a data-pin-do="embedPin" href="' + esc(u) + '"></a>'; } },
+      dribbble:   { name: 'Dribbble',    cls: 'link' },
+      behance:    { name: 'Behance',     cls: 'link' },
+      medium:     { name: 'Medium',      cls: 'link' },
+      gist:       { name: 'GitHub',      cls: 'link' },
+      link:       { name: 'Link',        cls: 'link' }
+    };
+
+    // Brand identity per platform: chip colour + a white single-path glyph
+    // (app-icon style → legible on both themes). No glyph → lettermark fallback.
+    var B = {
+      youtube:    { c: '#FF0000', i: '<path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>' },
+      vimeo:      { c: '#1AB7EA', i: '<path d="M23.9765 6.4168c-.105 2.338-1.739 5.5429-4.894 9.6088-3.2679 4.247-6.0258 6.3699-8.2898 6.3699-1.409 0-2.578-1.294-3.553-3.881l-1.9179-7.1138c-.719-2.584-1.488-3.878-2.312-3.878-.179 0-.806.378-1.881 1.132L0 7.3008c1.185-1.042 2.351-2.084 3.501-3.128C5.08 2.8169 6.266 2.0769 7.055 2.0049c1.867-.18 3.016 1.1 3.447 3.838.465 2.953.789 4.789.971 5.5069.539 2.45 1.131 3.674 1.776 3.674.502 0 1.256-.794 2.265-2.385 1.004-1.589 1.54-2.798 1.612-3.628.144-1.371-.395-2.061-1.614-2.061-.574 0-1.167.121-1.777.391 1.186-3.868 3.434-5.757 6.762-5.637 2.473.06 3.628 1.664 3.493 4.797z"/>' },
+      spotify:    { c: '#1DB954' },
+      soundcloud: { c: '#FF5500' },
+      applemusic: { c: '#FA243C' },
+      figma:      { c: '#F24E1E' },
+      codepen:    { c: '#0EA5E9' },
+      loom:       { c: '#625DF5' },
+      bluesky:    { c: '#0085FF' },
+      linkedin:   { c: '#0A66C2', i: '<path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>' },
+      substack:   { c: '#FF6719' },
+      flickr:     { c: '#0063DC' },
+      tiktok:     { c: '#EE1D52' },
+      instagram:  { c: '#E1306C', i: '<path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/>' },
+      x:          { c: '#0F1419', i: '<path d="M14.234 10.162 22.977 0h-2.072l-7.591 8.824L7.251 0H.258l9.168 13.343L.258 24H2.33l8.016-9.318L16.749 24h6.993zm-2.837 3.299-.929-1.329L3.076 1.56h3.182l5.965 8.532.929 1.329 7.754 11.09h-3.182z"/>' },
+      threads:    { c: '#000000' },
+      pinterest:  { c: '#BD081C' },
+      dribbble:   { c: '#EA4C89', i: '<path d="M12 24C5.385 24 0 18.615 0 12S5.385 0 12 0s12 5.385 12 12-5.385 12-12 12zm10.12-10.358c-.35-.11-3.17-.953-6.384-.438 1.34 3.684 1.887 6.684 1.992 7.308 2.3-1.555 3.936-4.02 4.395-6.87zm-6.115 7.808c-.153-.9-.75-4.032-2.19-7.77l-.066.02c-5.79 2.015-7.86 6.025-8.04 6.4 1.73 1.358 3.92 2.166 6.29 2.166 1.42 0 2.77-.29 4-.814zm-11.62-2.58c.232-.4 3.045-5.055 8.332-6.765.135-.045.27-.084.405-.12-.26-.585-.54-1.167-.832-1.74C7.17 11.775 2.206 11.71 1.756 11.7l-.004.312c0 2.633.998 5.037 2.634 6.855zm-2.42-8.955c.46.008 4.683.026 9.477-1.248-1.698-3.018-3.53-5.558-3.8-5.928-2.868 1.35-5.01 3.99-5.676 7.17zM9.6 2.052c.282.38 2.145 2.914 3.822 6 3.645-1.365 5.19-3.44 5.373-3.702-1.81-1.61-4.19-2.586-6.795-2.586-.825 0-1.63.1-2.4.285zm10.335 3.483c-.218.29-1.935 2.493-5.724 4.04.24.49.47.985.68 1.486.08.18.15.36.22.53 3.41-.43 6.8.26 7.14.33-.02-2.42-.88-4.64-2.31-6.38z"/>' },
+      behance:    { c: '#1769FF', i: '<path d="M16.969 16.927a2.561 2.561 0 0 0 1.901.677 2.501 2.501 0 0 0 1.531-.475c.362-.235.636-.584.779-.99h2.585a5.091 5.091 0 0 1-1.9 2.896 5.292 5.292 0 0 1-3.091.88 5.839 5.839 0 0 1-2.284-.433 4.871 4.871 0 0 1-1.723-1.211 5.657 5.657 0 0 1-1.08-1.874 7.057 7.057 0 0 1-.383-2.393c-.005-.8.129-1.595.396-2.349a5.313 5.313 0 0 1 5.088-3.604 4.87 4.87 0 0 1 2.376.563c.661.362 1.231.87 1.668 1.485a6.2 6.2 0 0 1 .943 2.133c.194.821.263 1.666.205 2.508h-7.699c-.063.79.184 1.574.688 2.187ZM6.947 4.084a8.065 8.065 0 0 1 1.928.198 4.29 4.29 0 0 1 1.49.638c.418.303.748.711.958 1.182.241.579.357 1.203.341 1.83a3.506 3.506 0 0 1-.506 1.961 3.726 3.726 0 0 1-1.503 1.287 3.588 3.588 0 0 1 2.027 1.437c.464.747.697 1.615.67 2.494a4.593 4.593 0 0 1-.423 2.032 3.945 3.945 0 0 1-1.163 1.413 5.114 5.114 0 0 1-1.683.807 7.135 7.135 0 0 1-1.928.259H0V4.084h6.947Zm-.235 12.9c.308.004.616-.029.916-.099a2.18 2.18 0 0 0 .766-.332c.228-.158.411-.371.534-.619.142-.317.208-.663.191-1.009a2.08 2.08 0 0 0-.642-1.715 2.618 2.618 0 0 0-1.696-.505h-3.54v4.279h3.471Zm13.635-5.967a2.13 2.13 0 0 0-1.654-.619 2.336 2.336 0 0 0-1.163.259 2.474 2.474 0 0 0-.738.62 2.359 2.359 0 0 0-.396.792c-.074.239-.12.485-.137.734h4.769a3.239 3.239 0 0 0-.679-1.785l-.002-.001Zm-13.813-.648a2.254 2.254 0 0 0 1.423-.433c.399-.355.607-.88.56-1.413a1.916 1.916 0 0 0-.178-.891 1.298 1.298 0 0 0-.495-.533 1.851 1.851 0 0 0-.711-.274 3.966 3.966 0 0 0-.835-.073H3.241v3.631h3.293v-.014ZM21.62 5.122h-5.976v1.527h5.976V5.122Z"/>' },
+      medium:     { c: '#12100E', i: '<path d="M13.54 12a6.8 6.8 0 0 1-6.77 6.82A6.8 6.8 0 0 1 0 12a6.8 6.8 0 0 1 6.77-6.82A6.8 6.8 0 0 1 13.54 12zm7.42 0c0 3.54-1.51 6.42-3.38 6.42-1.87 0-3.39-2.88-3.39-6.42s1.52-6.42 3.39-6.42 3.38 2.88 3.38 6.42zM24 12c0 3.17-.53 5.75-1.19 5.75-.66 0-1.19-2.58-1.19-5.75s.53-5.75 1.19-5.75C23.47 6.25 24 8.83 24 12z"/>' },
+      gist:       { c: '#181717', i: '<path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>' },
+      link:       { c: '#D97706', i: '<path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm6.93 6h-2.95c-.32-1.25-.78-2.45-1.38-3.56 1.84.63 3.37 1.91 4.33 3.56zM12 4.04c.83 1.2 1.48 2.53 1.91 3.96h-3.82c.43-1.43 1.08-2.76 1.91-3.96zM4.26 14C4.1 13.36 4 12.69 4 12s.1-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2 0 .68.06 1.34.14 2H4.26zm.82 2h2.95c.32 1.25.78 2.45 1.38 3.56-1.84-.63-3.37-1.9-4.33-3.56zm2.95-8H5.08c.96-1.66 2.49-2.93 4.33-3.56C8.81 5.55 8.35 6.75 8.03 8zM12 19.96c-.83-1.2-1.48-2.53-1.91-3.96h3.82c-.43 1.43-1.08 2.76-1.91 3.96zM14.34 14H9.66c-.09-.66-.16-1.32-.16-2 0-.68.07-1.35.16-2h4.68c.09.65.16 1.32.16 2 0 .68-.07 1.34-.16 2zm.25 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95c-.96 1.65-2.49 2.93-4.33 3.56zM16.36 14c.08-.66.14-1.32.14-2 0-.68-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2h-3.38z"/>' }
+    };
+    function chip(key, name) {
+      var b = B[key] || B.link;
+      var glyph = b.i ? '<svg viewBox="0 0 24 24" aria-hidden="true">' + b.i + '</svg>'
+                      : '<span class="social-letter">' + esc((name || '?').charAt(0)) + '</span>';
+      return '<span class="social-chip" style="background:' + b.c + '">' + glyph + '</span>';
+    }
+    function brandColor(key) { return (B[key] || B.link).c; }
+    function handle(url) {
+      var u = String(url).replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/+$/, '');
+      return u.length > 36 ? u.slice(0, 35) + '…' : u;
+    }
+    // Script embeds are for a single POST. A profile/channel URL has no post id
+    // → it becomes a profile card instead of an empty/foreign embed.
+    var POST_RE = {
+      tiktok: /\/video\/\d+/, instagram: /\/(p|reel|reels|tv)\//,
+      x: /\/status\/\d+/, threads: /\/(post|t)\//, pinterest: /\/pin\//
+    };
+
+    var loaded = {};
+    function loadScript(src) {
+      if (!src || loaded[src]) return;
+      loaded[src] = 1;
+      var s = document.createElement('script');
+      s.async = true; s.src = src;
+      document.body.appendChild(s);
+    }
+
+    var needsProcess = {};
+    // Live third-party embeds only load over http(s); on file:// the platforms
+    // refuse the frame, so there a static "View on …" card links out instead.
+    var EMBEDS_OK = (location.protocol === 'http:' || location.protocol === 'https:');
+    function processEmbeds() {
+      Object.keys(needsProcess).forEach(function (k) {
+        var cfg = needsProcess[k];
+        if (window[cfg.global]) { try { cfg.process(); } catch (e) {} }
+      });
+    }
+    function reprocessEmbeds() {
+      try { if (window.twttr && window.twttr.widgets) window.twttr.widgets.load(); } catch (e) {}
+      try { if (window.instgrm && window.instgrm.Embeds) window.instgrm.Embeds.process(); } catch (e) {}
+    }
+    // Lazy embed: register the holder; the staggered loader (fillVisible) loads
+    // each pending holder one at a time when its pane is shown — firing every
+    // embed at once stampedes the connection pool and strands some.
+    function lazyEmbed(holder, fill) { holder.__loadEmbed = function () { holder.__loadEmbed = null; fill(); }; }
+    var STAGGER_MS = 300, stagT = 0;
+    function loadStaggered(holders, i) {
+      if (i >= holders.length) { reprocessEmbeds(); stagT = 0; return; }
+      var h = holders[i];
+      if (h && h.__loadEmbed) h.__loadEmbed();
+      stagT = setTimeout(function () { loadStaggered(holders, i + 1); }, STAGGER_MS);
+    }
+    function fillVisible() {
+      var pend = [];
+      document.querySelectorAll('.social-embed[data-embed-pending]').forEach(function (h) {
+        if (h.offsetParent !== null && h.__loadEmbed) pend.push(h);
+      });
+      pend.sort(function (a, b) { return a.getBoundingClientRect().top - b.getBoundingClientRect().top; });
+      if (stagT) { clearTimeout(stagT); stagT = 0; }
+      loadStaggered(pend, 0);
+    }
+    var fvT = 0;
+    function fillVisibleSoon() { if (fvT) return; fvT = setTimeout(function () { fvT = 0; fillVisible(); }, 80); }
+
+    function buildSocialCard(post) {
+      var key = String(post.platform || 'link').toLowerCase();
+      var cfg = P[key] || P.link;
+      var url = String(post.url);
+      var name = cfg.name;
+      // Resolve the embed MARKUP (not yet injected) when the URL is embeddable.
+      var embedHTML = null, embedScript = null, embedH = cfg.h || 240;
+      if (cfg.cls === 'iframe') {
+        var src = null; try { src = cfg.src(url); } catch (e) { src = null; }
+        if (src) embedHTML = '<iframe src="' + esc(src) + '" height="' + embedH
+          + '" loading="lazy" frameborder="0" scrolling="no" allow="autoplay; encrypted-media; fullscreen; picture-in-picture; clipboard-write" allowfullscreen title="' + esc(name) + ' embed"></iframe>';
+      } else if (cfg.cls === 'script' && (!POST_RE[key] || POST_RE[key].test(url))) {
+        try { embedHTML = cfg.block(url); } catch (e) { embedHTML = null; }
+        if (embedHTML) embedScript = cfg.script;
+      }
+      var card = document.createElement('article');
+      var meta = '<span class="social-meta"><span class="social-plat">' + esc(name) + '</span>'
+        + (post.caption ? '<span class="social-cap">' + esc(post.caption) + '</span>' : '');
+      var head = '<div class="social-head">' + chip(key, name) + meta + '</span></div>';
+      var viewLink = '<a class="social-link" href="' + esc(url) + '" target="_blank" rel="noopener">'
+        + esc(post.title || ('View on ' + name)) + '<span class="material-symbols-rounded ext">open_in_new</span></a>';
+      if (embedHTML != null && EMBEDS_OK) {
+        // EMBED CARD — header + a placeholder whose loader stays overlaid until
+        // the live embed actually paints (a blocked/dead embed falls back to a
+        // link, never a blank frame) + a quiet view link.
+        card.className = 'social-card social-' + key + ' social-cls-embed';
+        card.innerHTML = head + '<div class="social-embed" data-embed-pending style="min-height:' + embedH + 'px"><div class="embed-loader" aria-hidden="true"><span></span><span></span><span></span><span></span></div></div>' + viewLink;
+        var holder = card.querySelector('.social-embed');
+        lazyEmbed(holder, function () {
+          var loader = holder.querySelector('.embed-loader');
+          holder.insertAdjacentHTML('afterbegin', embedHTML);
+          if (embedScript) { loadScript(embedScript); if (cfg.process) { needsProcess[key] = cfg; setTimeout(processEmbeds, 120); setTimeout(processEmbeds, 1500); } }
+          var settled = false, mo = null, poll = null;
+          function finish(ok) {
+            if (settled) return; settled = true;
+            if (mo) mo.disconnect(); if (poll) clearInterval(poll);
+            holder.removeAttribute('data-embed-pending');
+            if (ok) { if (loader && loader.parentNode) loader.parentNode.removeChild(loader); }
+            else { holder.innerHTML = '<a class="social-embed-static" href="' + esc(url) + '" target="_blank" rel="noopener"><span class="material-symbols-rounded">open_in_new</span>View on ' + esc(name) + '</a>'; }
+          }
+          function check() { var f = holder.querySelector('iframe'); if (f && f.clientHeight > 40) finish(true); }
+          function onload() { setTimeout(check, 250); }
+          var fr0 = holder.querySelector('iframe'); if (fr0) fr0.addEventListener('load', onload);
+          mo = new MutationObserver(function () { var f = holder.querySelector('iframe'); if (f) { f.addEventListener('load', onload); check(); } });
+          mo.observe(holder, { childList: true, subtree: true });
+          poll = setInterval(check, 500);
+          setTimeout(function () { finish(false); }, 6000);
+        });
+      } else if (embedHTML != null) {
+        // file:// — a static card that links out (never a blank frame).
+        card.className = 'social-card social-' + key + ' social-cls-embed social-cls-static';
+        card.innerHTML = head + '<a class="social-embed-static" href="' + esc(url) + '" target="_blank" rel="noopener"><span class="material-symbols-rounded">open_in_new</span>View on ' + esc(name) + '</a>';
+      } else {
+        // PROFILE CARD — the whole card is a designed, brand-coloured link tile.
+        card.className = 'social-card social-' + key + ' social-cls-profile';
+        card.innerHTML = '<a class="social-profile" href="' + esc(url) + '" target="_blank" rel="noopener" style="--brand:' + brandColor(key) + '">'
+          + chip(key, name) + meta + '<span class="social-handle">' + esc(handle(url)) + '</span></span>'
+          + '<span class="social-go material-symbols-rounded">arrow_outward</span></a>';
+      }
+      return card;
+    }
+
+    // Featured WORK item (from the timeline) → a compact card that jumps to its
+    // full entry. type drives the kicker + accent (same palette as the rail).
+    var FT_LABEL = { experience: 'Experience', project: 'Project', education: 'Education', certification: 'Certification' };
+    var FT_COLOR = { experience: 'var(--app-experience)', project: 'var(--app-projects)', education: 'var(--app-education)', certification: 'var(--app-certifications)' };
+    var FT_ICON = { experience: 'work', project: 'rocket_launch', education: 'school', certification: 'verified' };
+    function buildFeatureCard(e) {
+      var type = String(e.type || 'experience').toLowerCase();
+      var sub = [e.org, e.metric].filter(Boolean).map(String).join(' · ');
+      var a = document.createElement('a');
+      a.className = 'feature-card feature-' + type;
+      a.href = '#' + String(e.anchor || ('tl-' + e.id));
+      a.setAttribute('data-jump', String(e.anchor || ('tl-' + e.id)));
+      a.setAttribute('data-pane', String(e.pane || 'experience'));
+      a.style.setProperty('--accent', FT_COLOR[type] || 'var(--accent-slate)');
+      a.innerHTML = '<span class="feature-chip">'
+        + (e.domain ? '<img src="https://www.google.com/s2/favicons?domain=' + esc(String(e.domain)) + '&sz=64" alt="" loading="lazy" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'\'">' : '')
+        + '<span class="material-symbols-rounded"' + (e.domain ? ' style="display:none"' : '') + '>' + (FT_ICON[type] || 'work') + '</span></span>'
+        + '<span class="feature-body"><span class="feature-kicker">' + esc(FT_LABEL[type] || type) + '</span>'
+        + '<span class="feature-title">' + esc(e.label || '') + '</span>'
+        + (sub ? '<span class="feature-sub">' + esc(sub) + '</span>' : '') + '</span>'
+        + '<span class="feature-go material-symbols-rounded">arrow_forward</span>';
+      return a;
+    }
+    var valid = function (p) { return p && typeof p === 'object' && p.url; };
+
+    // FEED — the full Social pane (every post; masonry via .social-grid CSS).
+    if (grid) posts.filter(valid).forEach(function (post) { grid.appendChild(buildSocialCard(post)); });
+
+    // A social produces a real EMBED only when its platform resolves one — an
+    // iframe src, or a script embed pointed at a single POST (not a profile).
+    // Profile / link cards have nothing to embed → they belong in the headline.
+    function isEmbeddable(p) {
+      if (!valid(p)) return false;
+      var k = String(p.platform || 'link').toLowerCase();
+      var cfg = P[k];
+      if (!cfg) return false;
+      if (cfg.cls === 'iframe') { try { return !!cfg.src(String(p.url)); } catch (e) { return false; } }
+      if (cfg.cls === 'script') { return !POST_RE[k] || POST_RE[k].test(String(p.url)); }
+      return false; // 'link' / unknown
+    }
+    function platLabel(p) {
+      var k = String(p.platform || 'link').toLowerCase();
+      return k === 'link' ? 'Website' : ((P[k] || P.link).name);
+    }
+    var embeddable = posts.filter(isEmbeddable);
+
+    // HEADLINE — every NON-embeddable social (a profile/link card) joins the
+    // identity's contact row as an app-name pill (LinkedIn, Dribbble, …) instead
+    // of a bland link card in the overview. The pills ride with the contact row
+    // into the wide-screen rail.
+    (function injectHeadlineLinks() {
+      var row = document.querySelector('.contact-row');
+      if (!row) return;
+      row.querySelectorAll('.social-headline-link').forEach(function (el) { if (el.parentNode) el.parentNode.removeChild(el); });
+      posts.filter(function (p) { return valid(p) && !isEmbeddable(p); }).forEach(function (p) {
+        var k = String(p.platform || 'link').toLowerCase();
+        var b = B[k] || B.link;
+        var glyph = b.i ? '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' + b.i + '</svg>'
+                        : '<span class="material-symbols-rounded">link</span>';
+        var a = document.createElement('a');
+        a.className = 'item social-headline-link';
+        a.href = String(p.url); a.target = '_blank'; a.rel = 'noopener';
+        a.setAttribute('data-platform', k);
+        a.innerHTML = glyph + esc(platLabel(p));
+        row.appendChild(a);
+      });
+    })();
+
+    // OVERVIEW · "Latest from" — EMBEDS ONLY (a link card would stretch to the
+    // embed's height and leave a dead gap; those go to the headline above). Default
+    // = pinned embeds, else the first 2 embeddable.
+    var FEATURED_MAX = 2;
+    function defaultFeatured() {
+      var pinned = embeddable.filter(function (p) { return p.pinned; }).map(function (p) { return String(p.url); });
+      return (pinned.length ? pinned : embeddable.map(function (p) { return String(p.url); })).slice(0, FEATURED_MAX);
+    }
+    function renderLatest(urls) {
+      if (!latestEl) return;
+      var list = (urls && typeof urls.length === 'number') ? urls : defaultFeatured();
+      latestEl.innerHTML = '';
+      var n = 0;
+      list.slice(0, FEATURED_MAX).forEach(function (u) {
+        var post = null;
+        embeddable.forEach(function (p) { if (String(p.url) === String(u)) post = p; });
+        if (post) { latestEl.appendChild(buildSocialCard(post)); n++; }
+      });
+      var lw = document.getElementById('ov-latest-wrap');
+      if (lw) lw.hidden = !n;
+    }
+    if (latestEl) {
+      renderLatest();
+      document.addEventListener('hope:set-featured', function (ev) { renderLatest(ev && ev.detail && ev.detail.urls); });
+      try {
+        window.HOPE_SOCIAL_PICKER = {
+          max: Math.min(FEATURED_MAX, embeddable.length),
+          list: embeddable.map(function (p) { return { url: String(p.url), label: platLabel(p), pinned: !!p.pinned }; })
+        };
+      } catch (e) {}
+    }
+
+    // OVERVIEW · "Highlights" — featured work items (timeline) that jump to entry.
+    if (hlEl) {
+      var feat = timeline.filter(function (e) { return e && e.featured; });
+      feat.forEach(function (e) { hlEl.appendChild(buildFeatureCard(e)); });
+      var hw = document.getElementById('ov-highlights-wrap');
+      if (hw && feat.length) {
+        hw.hidden = false;
+        hlEl.addEventListener('click', function (ev) {
+          var a = ev.target.closest('[data-jump]'); if (!a) return;
+          ev.preventDefault();
+          var anchor = a.getAttribute('data-jump');
+          var btn = document.querySelector('.section-btn[data-section="' + a.getAttribute('data-pane') + '"]');
+          if (btn) btn.click();
+          var card = document.getElementById(anchor);
+          if (card) {
+            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            card.classList.add('hope-spotlight');
+            setTimeout(function () { card.classList.remove('hope-spotlight'); }, 2400);
+          }
+          try { document.dispatchEvent(new CustomEvent('hope:scrub', { detail: { anchor: anchor } })); } catch (e) {} // two-way: scrub the timeline
+        });
+        // Sync: light up the Highlight card the timeline playhead is on. A
+        // non-featured node keeps the last-lit card, so a "current" always shows.
+        document.addEventListener('hope:tlnode', function (ev) {
+          var anchor = ev && ev.detail && ev.detail.anchor; if (!anchor) return;
+          var match = hlEl.querySelector('[data-jump="' + anchor + '"]');
+          if (!match) return;
+          var cs = hlEl.querySelectorAll('.feature-card');
+          for (var ci = 0; ci < cs.length; ci++) cs[ci].classList.toggle('tl-live', cs[ci] === match);
+        });
+      }
+    }
+
+    // Kick the staggered load: the visible pane's embeds load top-to-bottom in
+    // one pass; switching section tiles reveals + loads the next pane's embeds.
+    // Embeds are lazy (only the on-screen pane fetches), and each loader stays
+    // until its embed paints — see buildSocialCard.
+    document.querySelectorAll('.section-btn').forEach(function (b) { b.addEventListener('click', fillVisibleSoon); });
+    window.addEventListener('resize', fillVisibleSoon);
+    fillVisibleSoon();
+  })();
+
   // Data: window.HOPE_DATA (data.js — the single authoring source; loaded
   // before this script). Shell: #throughline in index.html; visuals: the
   // tl-* block in portfolio.css. This code BUILDS the rail (track, year
@@ -835,6 +1225,9 @@
       playhead.style.transform = 'translate(' + playheadX(i) + 'px, ' + (-entries[i].lift).toFixed(1) + 'px)'; // transform-only motion — the traveler climbs the ridge
       traveler.classList.toggle('tl-flip', !!backward); // face backward on the loop wrap
       current = i;
+      // Sync the Overview Highlights to the playhead — the curated card whose
+      // entry the timeline is on lights up (option A: keep curation, add sync).
+      try { document.dispatchEvent(new CustomEvent('hope:tlnode', { detail: { anchor: entries[i].anchor } })); } catch (e) {}
     }
     function schedule(i, backward) {
       if (rafId) cancelAnimationFrame(rafId);
@@ -860,6 +1253,13 @@
     }
     if (reduced) setStatic(true); else schedule(0, false); // park on the first node
     window.setInterval(tick, 1000); // the 1s cadence; tick() no-ops while paused
+    // Two-way: a Highlight card (or any UI) can scrub the playhead to its entry.
+    document.addEventListener('hope:scrub', function (ev) {
+      var anchor = ev && ev.detail && ev.detail.anchor; if (!anchor) return;
+      for (var si = 0; si < entries.length; si++) {
+        if (entries[si].anchor === anchor) { if (!reduced) schedule(si, si < current); break; }
+      }
+    });
     if (reducedMq) {
       var onReducedChange = function () { reduced = reducedMq.matches; setStatic(reduced); };
       if (reducedMq.addEventListener) reducedMq.addEventListener('change', onReducedChange);
